@@ -140,15 +140,8 @@ Users working with large phylogenies are encouraged to:
 - consider parallel workflows for batch comparisons
 
 # Important Interpretation Notes
-## Dependencies
 
-- Python ≥ 3.11
-- numpy
-- scipy
-- ete4
-Many tree comparison metrics implemented here are information-based.
-
-For these metrics:
+Many tree comparison metrics implemented here are information-based. For these metrics:
 
 - Similarity values increase as trees become more similar.
 - Distance values increase as trees become more different.
