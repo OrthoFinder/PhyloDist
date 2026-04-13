@@ -2,13 +2,11 @@ from __future__ import annotations
 
 from typing import Optional
 import argparse
-import sys
 import json
-from typing import Any
 
 from .tree_comparator import TreeComparator
 from .tree_structure import TreeStructure
-from .utils import ScoreResult
+from . import utils
 
 
 class PhyloDist:
@@ -59,7 +57,7 @@ class PhyloDist:
         k: float = 1.0,
         tree1: Optional[TreeStructure] = None,
         tree2: Optional[TreeStructure] = None,
-    ) -> ScoreResult:
+    ) -> utils.ScoreResult:
         """
         Compare two trees.
 
@@ -100,7 +98,21 @@ class PhyloDist:
             raise TypeError("tree2 must be TreeStructure")
 
         if rooted is None:
-            rooted = bool(t1.is_rooted and t2.is_rooted)
+            if t1.is_rooted is None or t2.is_rooted is None:
+                raise ValueError(
+                    "Tree rootedness is unknown. "
+                    "Specify rooted=True or rooted=False."
+                )
+
+            if t1.is_rooted != t2.is_rooted:
+                raise ValueError(
+                    "Tree rootedness mismatch: "
+                    f"tree1 is rooted={t1.is_rooted}, "
+                    f"tree2 is rooted={t2.is_rooted}. "
+                    "Specify rooted=True or rooted=False."
+                )
+            
+            rooted = t1.is_rooted
 
         comparator = TreeComparator.from_tree_structures(
             t1,
@@ -246,31 +258,6 @@ def parse_args(argv=None):
     return parser.parse_args(argv)
 
 
-def _part_to_jsonable(part):
-    try:
-        return sorted(part)
-    except TypeError:
-        return sorted(map(str, part))
-
-
-def serialize_result(result) -> dict[str, Any]:
-    return {
-        "score": result.score,
-        "shared_taxa_count": len(result.shared_taxa),
-        "shared_taxa": _part_to_jsonable(result.shared_taxa),
-        "matched_pairs": [
-            {
-                "tree1": _part_to_jsonable(a),
-                "tree2": _part_to_jsonable(b),
-                "weight": w,
-            }
-            for a, b, w in result.matched_pairs
-        ],
-        "unmatched1": [_part_to_jsonable(p) for p in result.unmatched1],
-        "unmatched2": [_part_to_jsonable(p) for p in result.unmatched2],
-    }
-
-
 def main(argv=None):
     args = parse_args(argv)
 
@@ -286,24 +273,11 @@ def main(argv=None):
         parser=args.parser,
     )
 
-    # Resolve comparison mode
-    if args.compare_rooted is not None:
-        compare_rooted = args.compare_rooted
-    else:
-        if t1.is_rooted != t2.is_rooted:
-            raise ValueError(
-                "Tree rootedness mismatch: "
-                f"tree1 is rooted={t1.is_rooted}, "
-                f"tree2 is rooted={t2.is_rooted}. "
-                "Specify --compare-rooted or --compare-unrooted."
-            )
-        compare_rooted = t1.is_rooted
-
     grf = PhyloDist(t1, t2)
 
     result = grf.compare(
         method=args.method,
-        rooted=compare_rooted,
+        rooted=args.compare_rooted,
         normalise=args.normalise,
         return_type=args.return_type,
         k=args.k,
@@ -319,8 +293,8 @@ def main(argv=None):
             "k": args.k,
             "tree1_rooted": args.tree1_rooted,
             "tree2_rooted": args.tree2_rooted,
-            "compare_rooted": compare_rooted,
-            "result": serialize_result(result),
+            "compare_rooted": args.compare_rooted,
+            "result": utils.serialize_result(result),
         }
         print(json.dumps(payload, indent=2))
         return
@@ -334,7 +308,7 @@ def main(argv=None):
         print(f"k: {args.k}")
         print(f"tree1_rooted: {args.tree1_rooted}")
         print(f"tree2_rooted: {args.tree2_rooted}")
-        print(f"compare_rooted: {compare_rooted}")
+        print(f"compare_rooted: {args.compare_rooted}")
         print(f"shared_taxa: {len(result.shared_taxa)}")
         print(f"matched_pairs: {len(result.matched_pairs)}")
         print(f"unmatched1: {len(result.unmatched1)}")
@@ -344,11 +318,10 @@ def main(argv=None):
         print("\nMatched pairs:")
         for a, b, w in result.matched_pairs:
             print(
-                f"tree1={_part_to_jsonable(a)} "
-                f"<-> tree2={_part_to_jsonable(b)} "
+                f"tree1={utils._part_to_jsonable(a)} "
+                f"<-> tree2={utils._part_to_jsonable(b)} "
                 f"weight={w}"
             )
-
 
 if __name__ == "__main__":
     main()

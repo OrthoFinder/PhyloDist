@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from functools import lru_cache
-from typing import FrozenSet, Iterable, List, Optional, Tuple, Hashable
+from typing import FrozenSet, Iterable, List, Optional, Tuple, Hashable, Any
 
 import numpy as np
 from scipy.special import gammaln
@@ -242,3 +242,28 @@ def _jaccard_from_masks(a: int, b: int) -> float:
         return 0.0
     inter = (a & b).bit_count()
     return inter / union
+
+def _part_to_jsonable(part):
+    try:
+        return sorted(part)
+    except TypeError:
+        return sorted(map(str, part))
+
+
+def serialize_result(result) -> dict[str, Any]:
+    return {
+        "score": result.score,
+        "shared_taxa_count": len(result.shared_taxa),
+        "shared_taxa": _part_to_jsonable(result.shared_taxa),
+        "matched_pairs": [
+            {
+                "tree1": _part_to_jsonable(a),
+                "tree2": _part_to_jsonable(b),
+                "weight": w,
+            }
+            for a, b, w in result.matched_pairs
+        ],
+        "unmatched1": [_part_to_jsonable(p) for p in result.unmatched1],
+        "unmatched2": [_part_to_jsonable(p) for p in result.unmatched2],
+    }
+

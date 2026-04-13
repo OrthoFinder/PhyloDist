@@ -13,7 +13,7 @@ The library is designed to:
 
 ---
 
-# Features
+## Features
 
 Supported comparison methods:
 
@@ -32,15 +32,15 @@ Supported comparison methods:
 
 ---
 
-# Installation
+## Installation
 
-## Method 1 - Install directly from GitHub
+### Method 1 - Install directly from GitHub
 
 ```bash
 pip install git+https://github.com/OrthoFinder/PhyloDist.git
 ```
 
-## Method 2 - Clone the repository
+### Method 2 - Clone the repository
 
 ```bash
 git clone https://github.com/OrthoFinder/PhyloDist.git
@@ -48,14 +48,14 @@ cd PhyloDist
 pip install .
 ```
 
-## Dependencies
+### Dependencies
 
 - Python ≥ 3.11
 - numpy
 - scipy
 - ete4
 
-# Basic Usage
+## Basic Usage
 ```python
 from phylodist import PhyloDist, Tree
 
@@ -92,13 +92,13 @@ result = grf.compare(
 print(result.score)
 ```
 
-# Command Line Usage
+## Command Line Usage
 
 PhyloDist can be run in several ways depending on how it is installed.
 
 ---
 
-### Method 1 - Installed Command Line Tool
+#### Method 1 - Installed Command Line Tool
 After installation, you can run:
 ```bash
 phylodist tree1.txt tree2.txt \
@@ -108,7 +108,7 @@ phylodist tree1.txt tree2.txt \
     --compare-unrooted \
     --normalise
 ```
-### Method 2 - Run Using the Standalone Script
+#### Method 2 - Run Using the Standalone Script
 After downloading the repo locally, you can run:
 ```bash
 python phylodist.py tree1.txt tree2.txt\
@@ -119,7 +119,7 @@ python phylodist.py tree1.txt tree2.txt\
     --normalise
 ```
 
-## Command Line Options
+### Command Line Options
 - Required Arguments
 
 | Argument | Description                       |
@@ -176,7 +176,7 @@ phylodist --help
 ```
 
 
-# Scalability Notes
+## Scalability Notes
 
 Unlike **TreeDist (R)**, which is often used on trees of approximately **≤1000 leaves** in practice, **PhyloDist** does not impose a fixed upper limit on tree size.
 
@@ -196,7 +196,7 @@ Where:
 
 ---
 
-## Practical Recommendations
+### Practical Recommendations
 
 For best performance:
 
@@ -214,7 +214,7 @@ Performance depends strongly on:
 
 ---
 
-## Important Note
+### Important Note
 
 Large trees are supported, but runtime may increase substantially.  
 Users working with large phylogenies are encouraged to:
@@ -223,7 +223,7 @@ Users working with large phylogenies are encouraged to:
 - monitor memory usage
 - consider parallel workflows for batch comparisons
 
-# Important Interpretation Notes
+## Important Interpretation Notes
 
 Many tree comparison metrics implemented here are information-based. For these metrics:
 
@@ -241,5 +241,5 @@ Metrics especially affected include:
 - mci / cid
 
 
-# Reference
+## Reference
 - Martin R Smith, Information theoretic generalized Robinson–Foulds metrics for comparing phylogenetic trees, Bioinformatics, Volume 36, Issue 20, October 2020, Pages 5007–5013, [![DOI](https://img.shields.io/badge/DOI-10.1093%2Fbioinformatics%2Fbtaa614-blue)](https://doi.org/10.1093/bioinformatics/btaa614)
