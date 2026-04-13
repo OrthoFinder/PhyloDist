@@ -19,22 +19,22 @@ Supported comparison methods:
 
 | Method | Description | Return Type | TreeDist (R) Equivalent |
 |--------|-------------|-------------|--------------------------|
-| `rf` | Robinson–Foulds distance | Distance | `RobinsonFoulds(tree1, tree2, normalize = FALSE)` |
-| `jrf` | Jaccard Robinson–Foulds distance | Distance | `JaccardRobinsonFoulds(tree1, tree2, normalize = FALSE)` |
-| `icrf` | Information-corrected RF | Similarity (TreeDist-equivalent distance also available) | `InfoRobinsonFoulds(tree1, tree2, normalize = FALSE)` |
-| `nye` | Nye similarity | Similarity | `NyeSimilarity(tree1, tree2, normalize = FALSE)` |
-| `msi` | Matching Split Information | Similarity | `MatchingSplitInfo(tree1, tree2, normalize = FALSE)` |
-| `msid` | Matching Split Information Distance | Distance | `MatchingSplitInfoDistance(tree1, tree2, normalize = FALSE)` |
-| `spi` | Shared Phylogenetic Information | Similarity | `SharedPhylogeneticInfo(tree1, tree2, normalize = FALSE)` |
-| `pid` | Phylogenetic Information Distance | Distance | `PhylogeneticInfoDistance(tree1, tree2, normalize = FALSE)` |
-| `mci` | Mutual Clustering Information | Similarity | `MutualClusteringInfo(tree1, tree2, normalize = FALSE)` |
-| `cid` | Clustering Information Distance | Distance | `ClusteringInfoDist(tree1, tree2, normalize = FALSE)` |
+| `rf` | Robinson–Foulds distance | Distance | `RobinsonFoulds(tree1, tree2, normalise = FALSE)` |
+| `jrf` | Jaccard Robinson–Foulds distance | Distance | `JaccardRobinsonFoulds(tree1, tree2, normalise = FALSE)` |
+| `icrf` | Information-corrected RF | Similarity (TreeDist-equivalent distance also available) | `InfoRobinsonFoulds(tree1, tree2, normalise = FALSE)` |
+| `nye` | Nye similarity | Similarity | `NyeSimilarity(tree1, tree2, normalise = FALSE)` |
+| `msi` | Matching Split Information | Similarity | `MatchingSplitInfo(tree1, tree2, normalise = FALSE)` |
+| `msid` | Matching Split Information Distance | Distance | `MatchingSplitInfoDistance(tree1, tree2, normalise = FALSE)` |
+| `spi` | Shared Phylogenetic Information | Similarity | `SharedPhylogeneticInfo(tree1, tree2, normalise = FALSE)` |
+| `pid` | Phylogenetic Information Distance | Distance | `PhylogeneticInfoDistance(tree1, tree2, normalise = FALSE)` |
+| `mci` | Mutual Clustering Information | Similarity | `MutualClusteringInfo(tree1, tree2, normalise = FALSE)` |
+| `cid` | Clustering Information Distance | Distance | `ClusteringInfoDist(tree1, tree2, normalise = FALSE)` |
 
 ---
 
 # Installation
 
-## Method 1 — Install directly from GitHub
+## Method 1 - Install directly from GitHub
 
 ```bash
 pip install git+https://github.com/OrthoFinder/PhyloDist.git
@@ -91,6 +91,90 @@ result = grf.compare(
 
 print(result.score)
 ```
+
+# Command Line Usage
+
+PhyloDist can be run in several ways depending on how it is installed.
+
+---
+
+### Method 1 - Installed Command Line Tool
+After installation, you can run:
+```bash
+phylodist tree1.txt tree2.txt \
+    --method mci \
+    --tree1-unrooted \
+    --tree2-unrooted \
+    --compare-unrooted \
+    --normalise
+```
+### Method 2 - Run Using the Standalone Script
+After downloading the repo locally, you can run:
+```bash
+python phylodist.py tree1.txt tree2.txt\
+    --method mci \
+    --tree1-unrooted \
+    --tree2-unrooted \
+    --compare-unrooted \
+    --normalise
+```
+
+## Command Line Options
+- Required Arguments
+
+| Argument | Description                       |
+| -------- | --------------------------------- |
+| `tree1`  | First tree file or Newick string  |
+| `tree2`  | Second tree file or Newick string |
+
+- General Options
+
+| Option          | Type   | Default    | Description                        |
+| --------------- | ------ | ---------- | ---------------------------------- |
+| `--method`      | string | `rf`       | Comparison method                  |
+| `--normalise`   | flag   | `False`    | Return normalised score in `[0,1]` |
+| `--return-type` | string | `distance` | Return `distance` or `similarity`  |
+| `--k`           | float  | `1.0`      | Exponent parameter for JRF         |
+| `--parser`      | int    | `1`        | ETE parser format                  |
+
+- Rootedness Options
+
+| Option               | Description               |
+| -------------------- | ------------------------- |
+| `--tree1-rooted`     | Mark tree1 as rooted      |
+| `--tree1-unrooted`   | Mark tree1 as unrooted    |
+| `--tree2-rooted`     | Mark tree2 as rooted      |
+| `--tree2-unrooted`   | Mark tree2 as unrooted    |
+| `--compare-rooted`   | Force rooted comparison   |
+| `--compare-unrooted` | Force unrooted comparison |
+
+- Output Options
+
+| Option             | Description                       |
+| ------------------ | --------------------------------- |
+| `--verbose`        | Print diagnostic information      |
+| `--print-matching` | Display matched split/clade pairs |
+| `--json`           | Output full result as JSON        |
+- Available Methods
+
+| Method | Description                         | Output                 |
+| ------ | ----------------------------------- | ---------------------- |
+| `rf`   | Robinson–Foulds                     | Distance               |
+| `jrf`  | Jaccard Robinson–Foulds             | Distance               |
+| `icrf` | Information-corrected RF            | Similarity or Distance |
+| `nye`  | Nye similarity                      | Similarity             |
+| `msi`  | Matching Split Information          | Similarity             |
+| `msid` | Matching Split Information Distance | Distance               |
+| `spi`  | Shared Phylogenetic Information     | Similarity             |
+| `pid`  | Phylogenetic Information Distance   | Distance               |
+| `mci`  | Mutual Clustering Information       | Similarity             |
+| `cid`  | Clustering Information Distance     | Distance               |
+
+- Get Help
+```bash
+phylodist --help
+```
+
 
 # Scalability Notes
 

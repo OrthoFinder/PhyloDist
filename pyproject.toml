@@ -1,5 +1,10 @@
 [build-system]
-requires = ["setuptools>=77", "setuptools-scm[toml]>=8", "wheel", "packaging>=24.2"]
+requires = [
+    "setuptools>=77",
+    "setuptools-scm[toml]>=8",
+    "wheel",
+    "packaging>=24.2",
+]
 build-backend = "setuptools.build_meta"
 
 [project]
@@ -7,77 +12,67 @@ name = "phylodist"
 authors = [
     { name = "Yi Liu", email = "caoxen7ys@yahoo.com" },
 ]
-description = "Phylogenetic orthology inference for comparative genomics"
+description = "Python tools for comparing phylogenetic trees using classical and information-theoretic distance and similarity measures"
 readme = "README.md"
 dynamic = ["version"]
 requires-python = ">=3.11"
 keywords = [
-    "Phylogenetic distance or smilarity",
+    "phylogenetics",
+    "tree distance",
+    "tree similarity",
+    "bioinformatics",
 ]
 license = "LGPL-3.0-only"
 classifiers = [
-    # How mature is this project? Common values are
-    #   3 - Alpha
-    #   4 - Betaimport timeit
-    #   5 - Production/Stable
-    'Development Status :: 4 - Beta',
-
-    # Indicate who your project is intended for
-    'Intended Audience :: Science/Research',
-    'Topic :: Scientific/Engineering :: Bio-Informatics',
-
-    # Pick your license as you wish (should match "license" above)
-    # 'License :: OSI Approved :: GNU Lesser General Public License v3 (LGPLv3)',
-
-    # Specify the Python versions you support here.
-    "Programming Language :: Python :: 3.11", 
-    "Programming Language :: Python :: 3.12", 
-    "Programming Language :: Python :: 3.13", 
-    "Programming Language :: Python :: 3.14", 
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
 ]
-dependencies = ["numpy", "scipy", "ete4"]
+dependencies = [
+    "numpy",
+    "scipy",
+    "ete4",
+]
 
 [project.urls]
-repository = "https://github.com/OrthoFinder/PhyloDist"
+Repository = "https://github.com/OrthoFinder/PhyloDist"
 
 [project.optional-dependencies]
-build = ["build", "twine", "wheel"]
+build = [
+    "build",
+    "twine",
+    "wheel",
+]
 dev = [
     "python-semantic-release",
     "pytest",
     "pytest-cov",
     "pytest-check",
     "pytest-order",
-    # "pytest-subtests",
-    "setuptools>=77",
-    "setuptools-scm>=8",
-    "packaging>=24.2",
     "build",
 ]
 
 [project.scripts]
-phylodist = "phylodist.run.__main__:main"
-primary_transcript = "tools.primary_transcript:main"
-make_ultrametric = "tools.make_ultrametric:main"
-convert_phylodist_tree_ids = "tools.convert_phylodist_tree_ids:main"
+phylodist = "phylodist.main:main"
 
 [tool.semantic_release]
 branch = "main"
 version_source = "tag"
-# upload_to_pypi = true
 upload_to_release = true
 build_command = "python -m build"
+
+[tool.setuptools]
+include-package-data = true
 
 [tool.setuptools.packages.find]
 where = ["src"]
 include = ["phylodist*"]
 
-[tool.setuptools]
-include-package-data = true
-
 [tool.setuptools.package-data]
-"ExampleData" = ["*"]
-"*" = ["LICENSE"]
+phylodist = ["LICENSE"]
 
 [tool.setuptools.exclude-package-data]
 phylodist = ["**/__pycache__", "**/*.pyc"]
@@ -88,18 +83,18 @@ source = ["src/phylodist"]
 branch = true
 parallel = true
 concurrency = ["thread", "multiprocessing"]
-# patch = ["subprocess"] 
-# sigterm = true   
 
 [tool.coverage.report]
 show_missing = true
 omit = [
     "src/phylodist/_version.py",
 ]
-exclude_lines = ["pragma: no cover", "if __name__ == .__main__.:"]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+]
 
 [tool.pytest.ini_options]
-# addopts = "--cov=phylodist"
 addopts = "--cov=phylodist --cov-config=pyproject.toml"
 testpaths = ["tests"]
 markers = [
