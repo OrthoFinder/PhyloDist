@@ -22,6 +22,20 @@ class TreeStructure:
     - ete4.Tree
     """
 
+    @staticmethod
+    def _extract_rooted_flag(text: str) -> tuple[str, Optional[bool]]:
+        rooted = None
+        stripped = text.lstrip()
+
+        if stripped.startswith("[&R]"):
+            rooted = True
+            stripped = re.sub(r"^\[&R\]\s*", "", stripped)
+        elif stripped.startswith("[&U]"):
+            rooted = False
+            stripped = re.sub(r"^\[&U\]\s*", "", stripped)
+
+        return stripped, rooted
+
     def __init__(
         self,
         source: str | Tree,
@@ -29,11 +43,13 @@ class TreeStructure:
         parser: int | None = None,
     ):
         self.source = source
+        inferred_rooted = None
 
         if isinstance(source, Tree):
             self.t = source.copy()
         else:
             text = self._coerce_tree_text(source)
+            text, inferred_rooted = self._extract_rooted_flag(text)
             text = self._clean_tree_text(text)
 
             if parser is not None:
@@ -45,7 +61,7 @@ class TreeStructure:
                     self.t = Tree(text, parser=0)
 
         self.taxa: FrozenSet[Taxon] = frozenset(self.t.leaf_names())
-        self.is_rooted: Optional[bool] = is_rooted
+        self.is_rooted: Optional[bool] = is_rooted if is_rooted is not None else inferred_rooted
 
     @classmethod
     def from_newick(
@@ -138,10 +154,12 @@ class TreeStructure:
 
     def get_rooted_clades(self) -> List[Part]:
         clades: List[Part] = []
+
         for node in self._iter_internal_nodes():
             leaves = frozenset(node.leaf_names())
-            if 1 < len(leaves) < self.n_taxa:
+            if 1 < len(leaves) < self.n_taxa - 1:
                 clades.append(leaves)
+
         return clades
 
     def get_unrooted_splits(self) -> List[Part]:

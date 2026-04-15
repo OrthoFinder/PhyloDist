@@ -250,7 +250,7 @@ class TreeComparator(Scores):
             )
 
         elif method == "jrf":
-            dist, matched_idx = self.score_jrf(p1, p2, shared_int, k=k)
+            dist, matched_idx = self.score_jrf(p1, p2, shared_int, k=k, rooted=rooted)
 
             matched_i = {i for i, _, _ in matched_idx}
             matched_j = {j for _, j, _ in matched_idx}
@@ -264,7 +264,7 @@ class TreeComparator(Scores):
             )
 
         elif method == "jrf_bocker":
-            dist, matched_idx = self.score_jrf_bocker(p1, p2, shared_int, k=k)
+            dist, matched_idx = self.score_jrf_bocker(p1, p2, shared_int, k=k, rooted=rooted)
 
             matched_i = {i for i, _, _ in matched_idx}
             matched_j = {j for _, j, _ in matched_idx}

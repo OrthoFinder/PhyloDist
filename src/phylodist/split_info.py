@@ -114,21 +114,18 @@ class SplitInfo:
         taxa = utils._to_fset(taxa)
         return self._split_entropy_from_sizes(len(split), len(taxa))
 
-    def clade_entropy(self, clade: Part, taxa: Iterable[Taxon]) -> float:
-        return self.split_entropy(
-            clade,
-            self.information_taxa(taxa, rooted=True),
-        )
-
     def split_phylogenetic_information(self, split: Part, taxa: Iterable[Taxon]) -> float:
         taxa = utils._to_fset(taxa)
         return self._split_phylogenetic_information_from_sizes(len(split), len(taxa))
 
+    def clade_entropy(self, clade: Part, taxa: Iterable[Taxon]) -> float:
+        taxa = utils._to_fset(taxa)
+        return self._split_entropy_from_sizes(len(clade), len(taxa))
+
     def clade_phylogenetic_information(self, clade: Part, taxa: Iterable[Taxon]) -> float:
-        return self.split_phylogenetic_information(
-            clade,
-            self.information_taxa(taxa, rooted=True),
-        )
+        taxa = utils._to_fset(taxa)
+        return self._split_phylogenetic_information_from_sizes(len(clade), len(taxa))
+
 
     def _compatible_unrooted(self, a: Part, b: Part, taxa: Part) -> bool:
         taxa = utils._to_fset(taxa)

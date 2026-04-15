@@ -15,10 +15,33 @@ Part = FrozenSet[Taxon]
 class Scores(SplitInfo):
     def _effective_scoring_taxa(self, taxa: Part, rooted: bool) -> Part:
         """
-        For rooted comparisons, use dummy-root augmented taxa so rooted clades
-        are treated as splits on X ∪ {ROOT_DUMMY}, per Smith.
+        TreeDist-compatible scoring taxa.
+
+        For rooted comparisons, score rooted clades directly on the original
+        taxon set, without dummy-root augmentation.
         """
-        return self.information_taxa(taxa, rooted=True) if rooted else utils._to_fset(taxa)
+        del rooted
+        return utils._to_fset(taxa)
+
+    def _parts_to_scoring_masks(
+        self,
+        parts1: Sequence[Part],
+        parts2: Sequence[Part],
+        taxa: Part,
+        rooted: bool,
+    ) -> tuple[list[int], list[int], int]:
+        """
+        Encode parts against the correct scoring taxon set.
+
+        For rooted comparisons, rooted clades are encoded on X ∪ {ROOT_DUMMY},
+        which makes a rooted clade C behave like the split:
+
+            C | ((X \\ C) ∪ {ROOT_DUMMY})
+        """
+        score_taxa = self._effective_scoring_taxa(taxa, rooted)
+        masks1, full_mask, taxon_index = utils._parts_to_masks(parts1, score_taxa)
+        masks2, _, _ = utils._parts_to_masks(parts2, score_taxa, taxon_index=taxon_index)
+        return masks1, masks2, full_mask
 
     def _solve_weight_matching(
         self,
@@ -26,13 +49,11 @@ class Scores(SplitInfo):
     ) -> tuple[float, list[tuple[int, int, float]]]:
         """
         Safe Hungarian matching on a similarity matrix.
-        Any accidental NaN / +/-inf entries are clamped before solving.
         """
         if W.size == 0:
             return 0.0, []
 
         W = np.nan_to_num(W, nan=0.0, posinf=0.0, neginf=0.0)
-
         rows, cols = linear_sum_assignment(-W)
 
         sim = 0.0
@@ -53,7 +74,10 @@ class Scores(SplitInfo):
         rooted: bool = False,
     ) -> tuple[float, list[tuple[int, int, float]]]:
         """
-        Fast exact-match-only ICRF similarity.
+        Exact-match-only information-corrected RF similarity.
+
+        For rooted trees, exact rooted clades are matched and scored using
+        rooted clade information, which already uses dummy-root augmentation.
         """
         taxa = utils._to_fset(taxa)
 
@@ -85,9 +109,10 @@ class Scores(SplitInfo):
         rooted: bool = False,
     ) -> tuple[float, list[tuple[int, int, float]]]:
         """
-        Fast Nye similarity over all pairs.
+        Nye similarity over all pairs.
 
-        Assumes parts1, parts2, and taxa are already in the same label space.
+        Rooted trees are handled by encoding rooted clades on X ∪ {ROOT_DUMMY}
+        and then using the usual complement-aware split comparison.
         """
         taxa = utils._to_fset(taxa)
         m = len(parts1)
@@ -96,18 +121,8 @@ class Scores(SplitInfo):
         if m == 0 or n == 0:
             return 0.0, []
 
+        masks1, masks2, full_mask = self._parts_to_scoring_masks(parts1, parts2, taxa, rooted)
         W = np.empty((m, n), dtype=float)
-
-        if rooted:
-            for i, a in enumerate(parts1):
-                for j, b in enumerate(parts2):
-                    inter = len(a & b)
-                    union = len(a | b)
-                    W[i, j] = inter / union if union else 0.0
-            return self._solve_weight_matching(W)
-
-        masks1, full_mask, taxon_index = utils._parts_to_masks(parts1, taxa)
-        masks2, _, _ = utils._parts_to_masks(parts2, taxa, taxon_index=taxon_index)
 
         for i, a0 in enumerate(masks1):
             a1 = full_mask ^ a0
@@ -130,16 +145,17 @@ class Scores(SplitInfo):
         taxa: Part,
         rooted: bool = False,
     ) -> tuple[float, list[tuple[int, int, float]]]:
-        score_taxa = self._effective_scoring_taxa(taxa, rooted)
+        """
+        Matching Split Information similarity.
+        """
+        taxa = utils._to_fset(taxa)
         m = len(parts1)
         n = len(parts2)
 
         if m == 0 or n == 0:
             return 0.0, []
 
-        masks1, full_mask, taxon_index = utils._parts_to_masks(parts1, score_taxa)
-        masks2, _, _ = utils._parts_to_masks(parts2, score_taxa, taxon_index=taxon_index)
-
+        masks1, masks2, full_mask = self._parts_to_scoring_masks(parts1, parts2, taxa, rooted)
         W = np.empty((m, n), dtype=float)
 
         for i, a_mask in enumerate(masks1):
@@ -168,16 +184,17 @@ class Scores(SplitInfo):
         taxa: Part,
         rooted: bool = False,
     ) -> tuple[float, list[tuple[int, int, float]]]:
-        score_taxa = self._effective_scoring_taxa(taxa, rooted)
+        """
+        Mutual clustering information similarity.
+        """
+        taxa = utils._to_fset(taxa)
         m = len(parts1)
         n = len(parts2)
 
         if m == 0 or n == 0:
             return 0.0, []
 
-        masks1, full_mask, taxon_index = utils._parts_to_masks(parts1, score_taxa)
-        masks2, _, _ = utils._parts_to_masks(parts2, score_taxa, taxon_index=taxon_index)
-
+        masks1, masks2, full_mask = self._parts_to_scoring_masks(parts1, parts2, taxa, rooted)
         W = np.empty((m, n), dtype=float)
 
         for i, a_mask in enumerate(masks1):
@@ -199,16 +216,17 @@ class Scores(SplitInfo):
         taxa: Part,
         rooted: bool = False,
     ) -> tuple[float, list[tuple[int, int, float]]]:
-        score_taxa = self._effective_scoring_taxa(taxa, rooted)
+        """
+        Shared phylogenetic information similarity.
+        """
+        taxa = utils._to_fset(taxa)
         m = len(parts1)
         n = len(parts2)
 
         if m == 0 or n == 0:
             return 0.0, []
 
-        masks1, full_mask, taxon_index = utils._parts_to_masks(parts1, score_taxa)
-        masks2, _, _ = utils._parts_to_masks(parts2, score_taxa, taxon_index=taxon_index)
-
+        masks1, masks2, full_mask = self._parts_to_scoring_masks(parts1, parts2, taxa, rooted)
         W = np.empty((m, n), dtype=float)
 
         for i, a_mask in enumerate(masks1):
@@ -228,15 +246,12 @@ class Scores(SplitInfo):
         parts2: Sequence[Part],
         taxa: Part,
         k: float = 1.0,
+        rooted: bool = False,
     ) -> tuple[float, list[tuple[int, int, float]]]:
         """
-        TreeDist-compatible default JRF (non-arboreal), using bitmasks.
+        TreeDist-style non-arboreal JRF based on Nye pair similarity.
 
-        Similarity is the optimal matching sum of:
-            (Nye pair similarity)^k
-
-        Distance is:
-            |parts1| + |parts2| - 2 * similarity
+        Distance = |parts1| + |parts2| - 2 * optimal_matching_sum(Nye^k)
         """
         taxa = utils._to_fset(taxa)
         m = len(parts1)
@@ -245,9 +260,7 @@ class Scores(SplitInfo):
         if m == 0 or n == 0:
             return float(m + n), []
 
-        masks1, full_mask, taxon_index = utils._parts_to_masks(parts1, taxa)
-        masks2, _, _ = utils._parts_to_masks(parts2, taxa, taxon_index=taxon_index)
-
+        masks1, masks2, full_mask = self._parts_to_scoring_masks(parts1, parts2, taxa, rooted)
         W = np.empty((m, n), dtype=float)
 
         for i, a0 in enumerate(masks1):
@@ -273,14 +286,15 @@ class Scores(SplitInfo):
         parts2: Sequence[Part],
         taxa: Part,
         k: float = 1.0,
+        rooted: bool = False,
     ) -> tuple[float, list[tuple[int, int, float]]]:
         """
-        Böcker et al. non-arboreal JRF using bitmasks.
+        Böcker et al. non-arboreal JRF using unconstrained bipartite matching.
 
             δ_k(Y, Y') = 2 - 2 * J(Y, Y')^k
             δ_k(Y, -) = δ_k(-, Y') = 1
 
-        solved by unconstrained bipartite matching.
+        Rooted trees are handled by encoding clades on X ∪ {ROOT_DUMMY}.
         """
         taxa = utils._to_fset(taxa)
         m = len(parts1)
@@ -293,8 +307,7 @@ class Scores(SplitInfo):
         if n == 0:
             return float(m), []
 
-        masks1, full_mask, taxon_index = utils._parts_to_masks(parts1, taxa)
-        masks2, _, _ = utils._parts_to_masks(parts2, taxa, taxon_index=taxon_index)
+        masks1, masks2, full_mask = self._parts_to_scoring_masks(parts1, parts2, taxa, rooted)
 
         size = m + n
         big = 1e9
@@ -333,3 +346,4 @@ class Scores(SplitInfo):
                 pairs.append((r, c, float(C[r, c])))
 
         return dist, pairs
+
