@@ -142,6 +142,9 @@ class TreeStructure:
     
     def __iter__(self):
         return self.t.traverse()
+    
+    def write(self, *args, **kwargs):
+        return self.t.write(*args, **kwargs)
 
     
     @property
