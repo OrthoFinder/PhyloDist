@@ -136,7 +136,14 @@ class TreeStructure:
             else "unknown-rootedness"
         )
         return f"TreeStructure(n_taxa={len(self.taxa)}, {kind})"
+    
+    def __len__(self) -> int:
+        return self.n_taxa
+    
+    def __iter__(self):
+        return self.t.traverse()
 
+    
     @property
     def n_taxa(self) -> int:
         return len(self.taxa)
@@ -153,16 +160,20 @@ class TreeStructure:
                 yield node
 
     def get_rooted_clades(self) -> List[Part]:
-        clades: List[Part] = []
+        if self.is_rooted is False:
+            raise ValueError("Cannot extract rooted clades from a tree marked unrooted.")
 
+        clades: List[Part] = []
         for node in self._iter_internal_nodes():
             leaves = frozenset(node.leaf_names())
             if 1 < len(leaves) < self.n_taxa - 1:
                 clades.append(leaves)
-
         return clades
 
     def get_unrooted_splits(self) -> List[Part]:
+        if self.is_rooted is True:
+            raise ValueError("Cannot extract unrooted splits from a tree marked rooted.")
+
         splits: set[Part] = set()
         for node in self._iter_internal_nodes():
             if node.is_root:
